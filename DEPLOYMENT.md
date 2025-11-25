@@ -49,7 +49,7 @@ gcloud services enable \
 ```bash
 gcloud artifacts repositories create agents \
   --repository-format=docker \
-  --location=us-central1 \
+  --location=europe-west3 \
   --description="Container images for AI agents"
 ```
 
@@ -210,7 +210,7 @@ gcloud auth application-default login
 
 # Set environment variables
 export GCP_PROJECT="your-project-id"
-export GCP_REGION="us-central1"
+export GCP_REGION="europe-west3"
 
 # Deploy using Makefile
 make deploy
@@ -231,12 +231,12 @@ adk deploy agent_engine \
 # List deployed agents
 gcloud ai agents list \
   --project=$GCP_PROJECT \
-  --region=us-central1
+  --region=europe-west3
 
 # Get agent details
 gcloud ai agents describe AGENT_ID \
   --project=$GCP_PROJECT \
-  --region=us-central1
+  --region=europe-west3
 ```
 
 ### 2. View Logs
@@ -260,7 +260,7 @@ gcloud logging tail "resource.type=vertex_ai_agent_engine" \
 adk test agent_engine \
   --agent-id=AGENT_ID \
   --project=$GCP_PROJECT \
-  --region=us-central1 \
+  --region=europe-west3 \
   --query="Find revenue statistics for BASF"
 ```
 
@@ -269,7 +269,7 @@ adk test agent_engine \
 ```bash
 # List images in Artifact Registry
 gcloud artifacts docker images list \
-  us-central1-docker.pkg.dev/$GCP_PROJECT/agents/statista-agent
+  europe-west3-docker.pkg.dev/$GCP_PROJECT/agents/statista-agent
 ```
 
 ## Troubleshooting
@@ -406,7 +406,7 @@ Edit [.cloudbuild/cloudbuild.yaml](.cloudbuild/cloudbuild.yaml) to customize bui
   ```bash
   # Delete images older than 30 days
   gcloud artifacts docker images list \
-    us-central1-docker.pkg.dev/$GCP_PROJECT/agents/statista-agent \
+    europe-west3-docker.pkg.dev/$GCP_PROJECT/agents/statista-agent \
     --filter="createTime<$(date -d '30 days ago' --iso-8601)" \
     --format="get(package)" | \
     xargs -I {} gcloud artifacts docker images delete {}

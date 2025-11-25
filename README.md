@@ -229,7 +229,7 @@ This agent is configured for automated deployment to Google Cloud's Vertex AI Ag
      ```bash
      gcloud artifacts repositories create agents \
        --repository-format=docker \
-       --location=us-central1
+       --location=europe-west3
      ```
 
 2. **Workload Identity Federation:**
@@ -274,7 +274,7 @@ Deploy manually using the Makefile:
 ```bash
 # Set environment variables
 export GCP_PROJECT=your-project-id
-export GCP_REGION=us-central1
+export GCP_REGION=europe-west3
 
 # Deploy
 make deploy
@@ -287,7 +287,7 @@ adk deploy agent_engine \
   --agent-module agent_engine_app \
   --display-name "Statista Agent" \
   --project your-project-id \
-  --region us-central1
+  --region europe-west3
 ```
 
 ### Project Structure
@@ -319,7 +319,7 @@ The agent requires the following environment variables in production:
 ```bash
 GOOGLE_GENAI_USE_VERTEXAI=1
 GOOGLE_CLOUD_PROJECT=your-project-id
-GOOGLE_CLOUD_LOCATION=us-central1
+GOOGLE_CLOUD_LOCATION=europe-west3
 STATISTA_API_KEY=your-api-key
 STATISTA_MCP_URL=https://api.statista.ai/v1/mcp
 ```
@@ -356,7 +356,7 @@ gcloud logging read "resource.type=vertex_ai_agent_engine" \
   --limit 50
 
 # Check agent status
-gcloud ai agents list --project your-project-id --region us-central1
+gcloud ai agents list --project your-project-id --region europe-west3
 ```
 
 ---

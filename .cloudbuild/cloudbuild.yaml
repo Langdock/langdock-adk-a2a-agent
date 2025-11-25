@@ -27,20 +27,25 @@ steps:
     id: 'push-image-latest'
     waitFor: ['build-image']
 
-  # Install ADK and deploy to Vertex AI Agent Engine
-  - name: 'python:3.11'
-    entrypoint: 'bash'
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
     args:
-      - '-c'
-      - |
-        pip install google-adk[a2a]
-        adk deploy agent_engine \
-          --agent-module agent_engine_app \
-          --display-name "Statista Agent" \
-          --project ${PROJECT_ID} \
-          --region ${_REGION} \
-          --image ${_ARTIFACT_REGISTRY}/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/statista-agent:${SHORT_SHA}
-    id: 'deploy-agent'
+      - 'run'
+      - 'deploy'
+      - 'statista-a2a-agent'
+      - '--image=${_ARTIFACT_REGISTRY}/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/statista-agent:${SHORT_SHA}'
+      - '--platform=managed'
+      - '--region=${_REGION}'
+      - '--project=${PROJECT_ID}'
+      - '--port=8001'
+      - '--memory=1Gi'
+      - '--cpu=1'
+      - '--min-instances=0'
+      - '--max-instances=10'
+      - '--allow-unauthenticated'
+      - '--set-env-vars=GOOGLE_GENAI_USE_VERTEXAI=true,GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION}'
+    id: 'deploy-cloudrun'
     waitFor: ['push-image-sha', 'push-image-latest']
 
 # Store images in Artifact Registry

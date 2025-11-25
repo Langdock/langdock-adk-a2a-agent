@@ -35,5 +35,5 @@ EXPOSE 8001
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:8001/health', timeout=5)" || exit 1
 
-# Run the agent engine app
-CMD ["python", "agent_engine_app.py"]
+# Run the A2A agent
+CMD ["python", "a2a_rootagent.py"]

@@ -54,18 +54,36 @@ format:
 	black .
 	ruff check --fix .
 
-# Deployment targets (require ADK CLI)
+# Deployment targets (require gcloud CLI and Docker)
 deploy:
-	@echo "Deploying to production environment..."
+	@echo "Deploying A2A agent to Cloud Run..."
 	@if [ -z "$(GCP_PROJECT)" ]; then \
 		echo "Error: GCP_PROJECT environment variable is not set"; \
 		exit 1; \
 	fi
-	adk deploy agent_engine \
-		--agent-module agent_engine_app \
-		--display-name "Statista Agent" \
+	@if [ -z "$(GCP_REGION)" ]; then \
+		echo "Error: GCP_REGION environment variable is not set"; \
+		exit 1; \
+	fi
+	@echo "Step 1: Building Docker image..."
+	docker build -t $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/langdock-agents/statista-agent:latest .
+	@echo "Step 2: Configuring Docker authentication..."
+	gcloud auth configure-docker $(GCP_REGION)-docker.pkg.dev --quiet
+	@echo "Step 3: Pushing image to Artifact Registry..."
+	docker push $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/langdock-agents/statista-agent:latest
+	@echo "Step 4: Deploying to Cloud Run..."
+	gcloud run deploy statista-a2a-agent \
+		--image $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/langdock-agents/statista-agent:latest \
+		--platform managed \
+		--region $(GCP_REGION) \
 		--project $(GCP_PROJECT) \
-		--region $(GCP_REGION)
+		--port 8001 \
+		--memory 1Gi \
+		--cpu 1 \
+		--min-instances 0 \
+		--max-instances 10 \
+		--allow-unauthenticated \
+		--set-env-vars GOOGLE_GENAI_USE_VERTEXAI=true,GOOGLE_CLOUD_PROJECT=$(GCP_PROJECT),GOOGLE_CLOUD_LOCATION=$(GCP_REGION)
 
 # Utility targets
 clean:

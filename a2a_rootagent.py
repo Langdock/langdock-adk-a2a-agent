@@ -24,3 +24,9 @@ a2a_app = to_a2a(
     protocol="http",
     agent_card="agent_card.json"
 )
+
+# Start the server
+if __name__ == "__main__":
+    import uvicorn
+    logger.info("Starting A2A server on port 8001")
+    uvicorn.run(a2a_app, host="0.0.0.0", port=8001)

@@ -67,12 +67,17 @@ class ApiKeyAuthMiddleware(BaseHTTPMiddleware):
 
 # Convert the agent to an A2A application and expose it on port 8001
 # Specify host, protocol, and agent card for proper A2A configuration
+# Use agent_card_dev.json for local development, agent_card.json for production
+environment = os.getenv("ENVIRONMENT", "development")
+agent_card_file = "agent_card.json" if environment == "production" else "agent_card_dev.json"
+logger.info(f"Using agent card: {agent_card_file} (environment: {environment})")
+
 a2a_app = to_a2a(
     root_agent,
     host="0.0.0.0",
     port=8001,
     protocol="http",
-    agent_card="agent_card.json"
+    agent_card=agent_card_file
 )
 
 # Add authentication middleware - must be added BEFORE any routes are accessed

@@ -24,28 +24,8 @@ RETRY_DELAY = 2  # seconds
 _mcp_client: Optional[Client] = None
 
 
-class StatisaAuthenticationError(Exception):
-    """Raised when authentication with Statista API fails."""
-    pass
-
-
-class StatisaTimeoutError(Exception):
-    """Raised when a request to Statista API times out."""
-    pass
-
-
-class StatisaAPIError(Exception):
-    """Raised when Statista API returns an error."""
-    pass
-
-
 def _get_mcp_client() -> Client:
-    """Get or create the Statista MCP client.
-
-    Raises:
-        StatisaAuthenticationError: If API key is missing or invalid
-        StatisaAPIError: If client creation fails
-    """
+    """Get or create the Statista MCP client."""
     global _mcp_client
 
     if _mcp_client is None:
@@ -59,10 +39,7 @@ def _get_mcp_client() -> Client:
 
         if not mcp_api_key:
             logger.error("STATISTA_API_KEY environment variable is not set")
-            raise StatisaAuthenticationError(
-                "Authentication failed: STATISTA_API_KEY environment variable is required. "
-                "Please set your Statista API key in the .env file."
-            )
+            raise ValueError("STATISTA_API_KEY environment variable is required")
 
         try:
             _mcp_client = Client(
@@ -74,7 +51,7 @@ def _get_mcp_client() -> Client:
             logger.info("Statista MCP client created successfully")
         except Exception as e:
             logger.error(f"Failed to create MCP client: {type(e).__name__}: {e}")
-            raise StatisaAPIError(f"Failed to create Statista MCP client: {e}") from e
+            raise
 
     return _mcp_client
 
@@ -132,12 +109,8 @@ async def search_statistics(
                 logger.warning(f"[WARNING] Result has no 'content' attribute!")
                 logger.info(f"[DEBUG] Result.__dict__: {result.__dict__ if hasattr(result, '__dict__') else 'N/A'}")
 
-    except (StatisaAuthenticationError, StatisaTimeoutError, StatisaAPIError):
-        # Re-raise our custom exceptions so they can be handled by A2A framework
-        raise
     except Exception as e:
         error_msg = str(e)
-        error_lower = error_msg.lower()
         logger.error(f"[ERROR] Search failed: {type(e).__name__}: {error_msg}")
         logger.error(f"[ERROR] Full exception details:", exc_info=True)
 
@@ -148,29 +121,7 @@ async def search_statistics(
             if urls:
                 logger.error(f"[ERROR] Failed URL: {urls[0]}")
 
-        # Detect authentication errors
-        if any(keyword in error_lower for keyword in [
-            'unauthorized', '401', 'authentication', 'invalid token',
-            'api key', 'missing token', 'expired token', 'invalid api key',
-            'forbidden', '403'
-        ]):
-            raise StatisaAuthenticationError(
-                f"Authentication failed while searching Statista: {error_msg}. "
-                "Please check your API key is valid and not expired."
-            ) from e
-
-        # Detect timeout errors
-        if any(keyword in error_lower for keyword in [
-            'timeout', 'timed out', 'connection timeout', 'read timeout'
-        ]):
-            raise StatisaTimeoutError(
-                f"Request timed out while searching Statista: {error_msg}"
-            ) from e
-
-        # Wrap other errors as API errors
-        raise StatisaAPIError(
-            f"Error searching Statista: {type(e).__name__}: {error_msg}"
-        ) from e
+        return f"Error searching Statista: {type(e).__name__}: {error_msg}"
 
 
     # Store search results in context for reference
@@ -316,37 +267,9 @@ async def get_chart_data(
                     if hasattr(item, 'text'):
                         logger.debug(f"Content[{idx}] text length: {len(item.text)}")
                         logger.debug(f"Content[{idx}] preview: {item.text[:200]}...")
-    except (StatisaAuthenticationError, StatisaTimeoutError, StatisaAPIError):
-        # Re-raise our custom exceptions so they can be handled by A2A framework
-        raise
     except Exception as e:
-        error_msg = str(e)
-        error_lower = error_msg.lower()
         logger.error(f"Error getting chart data for ID {statistic_id}: {type(e).__name__}: {e}", exc_info=True)
-
-        # Detect authentication errors
-        if any(keyword in error_lower for keyword in [
-            'unauthorized', '401', 'authentication', 'invalid token',
-            'api key', 'missing token', 'expired token', 'invalid api key',
-            'forbidden', '403'
-        ]):
-            raise StatisaAuthenticationError(
-                f"Authentication failed while retrieving chart data: {error_msg}. "
-                "Please check your API key is valid and not expired."
-            ) from e
-
-        # Detect timeout errors
-        if any(keyword in error_lower for keyword in [
-            'timeout', 'timed out', 'connection timeout', 'read timeout'
-        ]):
-            raise StatisaTimeoutError(
-                f"Request timed out while retrieving chart data: {error_msg}"
-            ) from e
-
-        # Wrap other errors as API errors
-        raise StatisaAPIError(
-            f"Error retrieving chart data: {type(e).__name__}: {error_msg}"
-        ) from e
+        return f"Error retrieving chart data: {type(e).__name__}: {str(e)}"
 
 
     # Store retrieved chart data in context
@@ -509,34 +432,6 @@ async def get_available_tools(tool_context: ToolContext) -> str:
 
         logger.info(f"Successfully listed {len(tools)} tools")
         return formatted
-    except (StatisaAuthenticationError, StatisaTimeoutError, StatisaAPIError):
-        # Re-raise our custom exceptions so they can be handled by A2A framework
-        raise
     except Exception as e:
-        error_msg = str(e)
-        error_lower = error_msg.lower()
         logger.error(f"Error listing tools: {type(e).__name__}: {e}", exc_info=True)
-
-        # Detect authentication errors
-        if any(keyword in error_lower for keyword in [
-            'unauthorized', '401', 'authentication', 'invalid token',
-            'api key', 'missing token', 'expired token', 'invalid api key',
-            'forbidden', '403'
-        ]):
-            raise StatisaAuthenticationError(
-                f"Authentication failed while listing tools: {error_msg}. "
-                "Please check your API key is valid and not expired."
-            ) from e
-
-        # Detect timeout errors
-        if any(keyword in error_lower for keyword in [
-            'timeout', 'timed out', 'connection timeout', 'read timeout'
-        ]):
-            raise StatisaTimeoutError(
-                f"Request timed out while listing tools: {error_msg}"
-            ) from e
-
-        # Wrap other errors as API errors
-        raise StatisaAPIError(
-            f"Error listing tools: {type(e).__name__}: {error_msg}"
-        ) from e
+        return f"Error listing tools: {type(e).__name__}: {str(e)}"

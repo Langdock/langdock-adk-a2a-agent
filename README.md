@@ -239,11 +239,14 @@ This agent is configured for automated deployment to Google Cloud's Vertex AI Ag
      - Artifact Registry Writer
      - Cloud Build Editor
 
-3. **GitHub Secrets:**
-   Configure the following secrets in your repository settings:
+3. **GitHub Configuration:**
+
+   **Repository Variables** (Settings → Secrets and variables → Actions → Variables):
    - `GCP_PROJECT`: Your GCP project ID
    - `GCP_WORKLOAD_IDENTITY_PROVIDER`: Workload Identity Provider resource name
    - `GCP_SERVICE_ACCOUNT`: Service account email for deployment
+
+   **Repository Secrets** (Settings → Secrets and variables → Actions → Secrets):
    - `STATISTA_API_KEY`: Your Statista API key
 
 ### Deployment Workflows

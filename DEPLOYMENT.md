@@ -146,20 +146,29 @@ projects/123456789/locations/global/workloadIdentityPools/github-pool/providers/
 
 ## GitHub Configuration
 
-### 1. Add Repository Secrets
+### 1. Add Repository Variables
 
-Go to your GitHub repository → Settings → Secrets and variables → Actions → New repository secret
+Go to your GitHub repository → Settings → Secrets and variables → Actions → **Variables** tab
 
-Add the following secrets:
+Click **New repository variable** and add:
+
+| Variable Name | Value | Description |
+|---------------|-------|-------------|
+| `GCP_PROJECT` | `langdock` | Your GCP project ID |
+| `GCP_WORKLOAD_IDENTITY_PROVIDER` | `projects/.../github-provider` | Full provider resource name from step 3.4 |
+| `GCP_SERVICE_ACCOUNT` | `github-actions-deployer@langdock.iam.gserviceaccount.com` | Service account email |
+
+### 2. Add Repository Secrets
+
+Go to the **Secrets** tab (same location as Variables)
+
+Click **New repository secret** and add:
 
 | Secret Name | Value | Description |
 |-------------|-------|-------------|
-| `GCP_PROJECT` | `your-project-id` | Your GCP project ID |
-| `GCP_WORKLOAD_IDENTITY_PROVIDER` | `projects/.../github-provider` | Full provider resource name from step 3.4 |
-| `GCP_SERVICE_ACCOUNT` | `github-actions-deployer@...` | Service account email |
 | `STATISTA_API_KEY` | `your-statista-api-key` | Your Statista API key |
 
-### 2. Create Production Environment
+### 3. Create Production Environment
 
 1. Go to repository Settings → Environments
 2. Click "New environment"

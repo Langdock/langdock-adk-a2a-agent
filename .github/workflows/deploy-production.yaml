@@ -33,8 +33,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
@@ -45,14 +45,14 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT }}/agents/statista-agent:${{ github.sha }} \
-            -t ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT }}/agents/statista-agent:latest \
+          docker build -t ${{ env.ARTIFACT_REGISTRY }}/${{ vars.GCP_PROJECT }}/agents/statista-agent:${{ github.sha }} \
+            -t ${{ env.ARTIFACT_REGISTRY }}/${{ vars.GCP_PROJECT }}/agents/statista-agent:latest \
             -f Dockerfile .
 
       - name: Push Docker image
         run: |
-          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT }}/agents/statista-agent:${{ github.sha }}
-          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT }}/agents/statista-agent:latest
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ vars.GCP_PROJECT }}/agents/statista-agent:${{ github.sha }}
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ vars.GCP_PROJECT }}/agents/statista-agent:latest
 
       - name: Install ADK CLI
         run: |
@@ -60,18 +60,18 @@ jobs:
 
       - name: Deploy to Vertex AI Agent Engine
         env:
-          GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
+          GCP_PROJECT: ${{ vars.GCP_PROJECT }}
         run: |
           adk deploy agent_engine \
             --agent-module agent_engine_app \
             --display-name "Statista Agent" \
-            --project ${{ secrets.GCP_PROJECT }} \
+            --project ${{ vars.GCP_PROJECT }} \
             --region ${{ env.GCP_REGION }} \
-            --image ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT }}/agents/statista-agent:${{ github.sha }}
+            --image ${{ env.ARTIFACT_REGISTRY }}/${{ vars.GCP_PROJECT }}/agents/statista-agent:${{ github.sha }}
 
       - name: Run smoke tests
         env:
-          GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
+          GCP_PROJECT: ${{ vars.GCP_PROJECT }}
         run: |
           pip install -e ".[dev]"
           pytest tests/test_statista_example.py -v || true

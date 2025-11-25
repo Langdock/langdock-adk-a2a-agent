@@ -61,3 +61,21 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Deployment artifacts
+*.tar.gz
+*.zip
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+.terraform.lock.hcl
+
+# Docker
+.dockerignore
+
+# Cloud Build
+.cloudbuild/.build/
+
+# ADK
+.adk/
+adk-cache/

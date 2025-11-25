@@ -1,0 +1,93 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.11"
+  GCP_REGION: "us-central1"
+  ARTIFACT_REGISTRY: "us-central1-docker.pkg.dev"
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.ARTIFACT_REGISTRY }}
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT }}/agents/statista-agent:${{ github.sha }} \
+            -t ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT }}/agents/statista-agent:latest \
+            -f Dockerfile .
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT }}/agents/statista-agent:${{ github.sha }}
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT }}/agents/statista-agent:latest
+
+      - name: Install ADK CLI
+        run: |
+          pip install google-adk[a2a]
+
+      - name: Deploy to Vertex AI Agent Engine
+        env:
+          GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
+        run: |
+          adk deploy agent_engine \
+            --agent-module agent_engine_app \
+            --display-name "Statista Agent" \
+            --project ${{ secrets.GCP_PROJECT }} \
+            --region ${{ env.GCP_REGION }} \
+            --image ${{ env.ARTIFACT_REGISTRY }}/${{ secrets.GCP_PROJECT }}/agents/statista-agent:${{ github.sha }}
+
+      - name: Run smoke tests
+        env:
+          GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
+        run: |
+          pip install -e ".[dev]"
+          pytest tests/test_statista_example.py -v || true
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Production Release v${{ github.run_number }}
+          body: |
+            Deployed to production
+            - Image: ${{ github.sha }}
+            - Commit: ${{ github.sha }}
+            - Timestamp: ${{ github.event.head_commit.timestamp }}
+          draft: false
+          prerelease: false

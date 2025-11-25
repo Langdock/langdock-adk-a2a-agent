@@ -1,0 +1,60 @@
+steps:
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_ARTIFACT_REGISTRY}/${PROJECT_ID}/agents/statista-agent:${SHORT_SHA}'
+      - '-t'
+      - '${_ARTIFACT_REGISTRY}/${PROJECT_ID}/agents/statista-agent:latest'
+      - '-f'
+      - 'Dockerfile'
+      - '.'
+    id: 'build-image'
+
+  # Push the Docker image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '${_ARTIFACT_REGISTRY}/${PROJECT_ID}/agents/statista-agent:${SHORT_SHA}'
+    id: 'push-image-sha'
+    waitFor: ['build-image']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '${_ARTIFACT_REGISTRY}/${PROJECT_ID}/agents/statista-agent:latest'
+    id: 'push-image-latest'
+    waitFor: ['build-image']
+
+  # Install ADK and deploy to Vertex AI Agent Engine
+  - name: 'python:3.11'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        pip install google-adk[a2a]
+        adk deploy agent_engine \
+          --agent-module agent_engine_app \
+          --display-name "Statista Agent" \
+          --project ${PROJECT_ID} \
+          --region ${_REGION} \
+          --image ${_ARTIFACT_REGISTRY}/${PROJECT_ID}/agents/statista-agent:${SHORT_SHA}
+    id: 'deploy-agent'
+    waitFor: ['push-image-sha', 'push-image-latest']
+
+# Store images in Artifact Registry
+images:
+  - '${_ARTIFACT_REGISTRY}/${PROJECT_ID}/agents/statista-agent:${SHORT_SHA}'
+  - '${_ARTIFACT_REGISTRY}/${PROJECT_ID}/agents/statista-agent:latest'
+
+# Substitution variables
+substitutions:
+  _ARTIFACT_REGISTRY: 'us-central1-docker.pkg.dev'
+  _REGION: 'us-central1'
+
+options:
+  machineType: 'N1_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '3600s'

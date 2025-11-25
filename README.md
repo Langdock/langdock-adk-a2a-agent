@@ -210,13 +210,155 @@ Logs appear in terminal when agent is running. Look for:
 # Logs appear immediately in terminal
 ```
 
+## Deployment to Vertex AI Agent Engine
+
+This agent is configured for automated deployment to Google Cloud's Vertex AI Agent Engine via GitHub Actions.
+
+### Prerequisites
+
+1. **Google Cloud Project Setup:**
+   - Create or select a GCP project
+   - Enable required APIs:
+     ```bash
+     gcloud services enable \
+       aiplatform.googleapis.com \
+       artifactregistry.googleapis.com \
+       cloudbuild.googleapis.com
+     ```
+   - Create an Artifact Registry repository:
+     ```bash
+     gcloud artifacts repositories create agents \
+       --repository-format=docker \
+       --location=us-central1
+     ```
+
+2. **Workload Identity Federation:**
+   - Set up Workload Identity Federation for GitHub Actions
+   - Create a service account with required permissions:
+     - Vertex AI User
+     - Artifact Registry Writer
+     - Cloud Build Editor
+
+3. **GitHub Secrets:**
+   Configure the following secrets in your repository settings:
+   - `GCP_PROJECT`: Your GCP project ID
+   - `GCP_WORKLOAD_IDENTITY_PROVIDER`: Workload Identity Provider resource name
+   - `GCP_SERVICE_ACCOUNT`: Service account email for deployment
+   - `STATISTA_API_KEY`: Your Statista API key
+
+### Deployment Workflows
+
+#### Continuous Deployment (Automatic)
+Push to `main` branch triggers automatic deployment to production:
+
+```bash
+git add .
+git commit -m "Update agent"
+git push origin main
+```
+
+The GitHub Actions workflow will:
+1. Run CI tests (linting, type checking, unit tests)
+2. Build Docker image
+3. Push to Artifact Registry
+4. Deploy to Vertex AI Agent Engine
+5. Run smoke tests
+6. Create a GitHub release
+
+#### Manual Deployment (via CLI)
+Deploy manually using the Makefile:
+
+```bash
+# Set environment variables
+export GCP_PROJECT=your-project-id
+export GCP_REGION=us-central1
+
+# Deploy
+make deploy
+```
+
+Or use the ADK CLI directly:
+
+```bash
+adk deploy agent_engine \
+  --agent-module agent_engine_app \
+  --display-name "Statista Agent" \
+  --project your-project-id \
+  --region us-central1
+```
+
+### Project Structure
+
+```
+statista-agent/
+├── .github/
+│   └── workflows/
+│       ├── ci.yaml                    # CI pipeline (tests, linting)
+│       └── deploy-production.yaml     # Production deployment
+├── .cloudbuild/
+│   └── cloudbuild.yaml               # Google Cloud Build config
+├── statista_agent/
+│   ├── agent.py                      # Agent configuration
+│   └── statista_tools.py             # MCP integration tools
+├── agent_engine_app.py               # Vertex AI entry point
+├── a2a_rootagent.py                  # A2A server entry point
+├── Dockerfile                        # Container definition
+├── pyproject.toml                    # Python project config
+├── Makefile                          # Development commands
+└── agent_card.json                   # Agent metadata
+
+```
+
+### Environment Variables for Deployment
+
+The agent requires the following environment variables in production:
+
+```bash
+GOOGLE_GENAI_USE_VERTEXAI=1
+GOOGLE_CLOUD_PROJECT=your-project-id
+GOOGLE_CLOUD_LOCATION=us-central1
+STATISTA_API_KEY=your-api-key
+STATISTA_MCP_URL=https://api.statista.ai/v1/mcp
+```
+
+These should be configured in your deployment environment (Cloud Run, Agent Engine, etc.).
+
+### Local Development
+
+```bash
+# Install dependencies
+make install-dev
+
+# Run locally with A2A
+make playground
+
+# Run tests
+make test
+
+# Format code
+make format
+
+# Lint code
+make lint
+```
+
+### Monitoring and Logs
+
+After deployment, monitor your agent:
+
+```bash
+# View logs
+gcloud logging read "resource.type=vertex_ai_agent_engine" \
+  --project your-project-id \
+  --limit 50
+
+# Check agent status
+gcloud ai agents list --project your-project-id --region us-central1
+```
+
 ---
 
 **Status**: ✅ Production Ready
-**Last Updated**: 2025-11-19
+**Last Updated**: 2025-11-25
 **Version**: 1.0.0
-
-
-```
-https://mackerel-fresh-uniquely.ngrok-free.app/.well-known/agent-card.json
-```
+**Repository**: [github.com/Langdock/langdock-adk-a2a-agent](https://github.com/Langdock/langdock-adk-a2a-agent)

@@ -26,6 +26,18 @@
   },
   "docUrl": "https://www.statista.com",
   "preferredTransport": "JSONRPC",
-  "protocolVersion": "0.3.0"
+  "protocolVersion": "0.3.0",
+  "securitySchemes": {
+    "bearerAuth": {
+      "type": "http",
+      "scheme": "bearer",
+      "description": "Bearer token authentication for accessing the Statista agent"
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ]
 }
 

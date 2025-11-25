@@ -56,21 +56,22 @@ format:
 
 # Deployment configuration
 GCP_PROJECT ?= langdock
-GCP_REGION ?= europe-west3
+GCP_REGION ?= europe-west1
+ARTIFACT_REGISTRY_LOCATION ?= europe-west3
 
 # Deployment targets (require gcloud CLI and Docker)
 deploy:
 	@echo "Deploying A2A agent to Cloud Run..."
-	@echo "Using GCP_PROJECT=$(GCP_PROJECT), GCP_REGION=$(GCP_REGION)"
+	@echo "Using GCP_PROJECT=$(GCP_PROJECT), GCP_REGION=$(GCP_REGION), ARTIFACT_REGISTRY=$(ARTIFACT_REGISTRY_LOCATION)"
 	@echo "Step 1: Building Docker image..."
-	docker build -t $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/langdock-agents/statista-agent:latest .
+	docker build -t $(ARTIFACT_REGISTRY_LOCATION)-docker.pkg.dev/$(GCP_PROJECT)/langdock-agents/statista-agent:latest .
 	@echo "Step 2: Configuring Docker authentication..."
-	gcloud auth configure-docker $(GCP_REGION)-docker.pkg.dev --quiet
+	gcloud auth configure-docker $(ARTIFACT_REGISTRY_LOCATION)-docker.pkg.dev --quiet
 	@echo "Step 3: Pushing image to Artifact Registry..."
-	docker push $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/langdock-agents/statista-agent:latest
+	docker push $(ARTIFACT_REGISTRY_LOCATION)-docker.pkg.dev/$(GCP_PROJECT)/langdock-agents/statista-agent:latest
 	@echo "Step 4: Deploying to Cloud Run..."
 	gcloud run deploy statista-a2a-agent \
-		--image $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/langdock-agents/statista-agent:latest \
+		--image $(ARTIFACT_REGISTRY_LOCATION)-docker.pkg.dev/$(GCP_PROJECT)/langdock-agents/statista-agent:latest \
 		--platform managed \
 		--region $(GCP_REGION) \
 		--project $(GCP_PROJECT) \

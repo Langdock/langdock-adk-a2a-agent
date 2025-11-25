@@ -57,7 +57,7 @@ images:
 substitutions:
   _ARTIFACT_REGISTRY: 'europe-west3-docker.pkg.dev'
   _ARTIFACT_REGISTRY_REPO: 'langdock-agents'
-  _REGION: 'europe-west3'
+  _REGION: 'europe-west1'
 
 options:
   machineType: 'N1_HIGHCPU_8'

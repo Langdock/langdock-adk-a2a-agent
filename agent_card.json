@@ -1,0 +1,31 @@
+{
+  "name": "Statista Research Agent",
+  "description": "A powerful research agent with access to Statista's comprehensive statistical database. Search for statistics across various topics and retrieve detailed chart data including sources, methodology, and formatted data points.",
+  "url": "https://mackerel-fresh-uniquely.ngrok-free.app",
+  "version": "1.0.0",
+  "defaultInputModes": ["text/plain"],
+  "defaultOutputModes": ["text/plain"],
+  "skills": [
+    {
+      "id": "search_statistics",
+      "name": "Search Statistics",
+      "description": "Search Statista's database for statistics matching a query. Returns relevant statistics with IDs, titles, subjects, and preview information.",
+      "tags": ["search", "research", "statistics"]
+    },
+    {
+      "id": "get_chart_data",
+      "name": "Get Chart Data",
+      "description": "Retrieve detailed chart data for a specific statistic by ID. Returns complete chart information including graph type, data points, sources, and metadata.",
+      "tags": ["data", "charts", "statistics"]
+    }
+  ],
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false,
+    "stateTransitionHistory": false
+  },
+  "docUrl": "https://www.statista.com",
+  "preferredTransport": "JSONRPC",
+  "protocolVersion": "0.3.0"
+}
+

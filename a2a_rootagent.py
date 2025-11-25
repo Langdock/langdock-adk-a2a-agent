@@ -25,7 +25,7 @@ class ApiKeyAuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Skip auth only for specific GET endpoints (health check and agent card)
         # The root path "/" should be protected for POST requests (which are RPC calls)
-        if request.url.path in ["/health", "/.well-known/agent-card.json"]:
+        if request.url.path in ["/", "/health", "/.well-known/agent-card.json"]:
             logger.debug(f"Allowing unauthenticated access to {request.url.path}")
             return await call_next(request)
 

@@ -24,6 +24,18 @@
     "pushNotifications": false,
     "stateTransitionHistory": false
   },
+  "securitySchemes": {
+    "apiKeySecurityScheme": {
+      "location": "header",
+      "name": "X-API-Key",
+      "description": "API key authentication required"
+    }
+  },
+  "security": [
+    {
+      "apiKeySecurityScheme": []
+    }
+  ],
   "docUrl": "https://www.statista.com",
   "preferredTransport": "JSONRPC",
   "protocolVersion": "0.3.0"

@@ -9,7 +9,8 @@ on:
 env:
   PYTHON_VERSION: "3.11"
   GCP_REGION: "europe-west3"
-  ARTIFACT_REGISTRY: "europe-west3-docker.pkg.dev"
+  ARTIFACT_REGISTRY_LOCATION: "europe-west3-docker.pkg.dev"
+  ARTIFACT_REGISTRY_REPO: "langdock-agents"
 
 jobs:
   build-and-deploy:
@@ -41,18 +42,18 @@ jobs:
 
       - name: Configure Docker for Artifact Registry
         run: |
-          gcloud auth configure-docker ${{ env.ARTIFACT_REGISTRY }}
+          gcloud auth configure-docker ${{ env.ARTIFACT_REGISTRY_LOCATION }}
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ env.ARTIFACT_REGISTRY }}/${{ vars.GCP_PROJECT }}/agents/statista-agent:${{ github.sha }} \
-            -t ${{ env.ARTIFACT_REGISTRY }}/${{ vars.GCP_PROJECT }}/agents/statista-agent:latest \
+          docker build -t ${{ env.ARTIFACT_REGISTRY_LOCATION }}/${{ vars.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPO }}/statista-agent:${{ github.sha }} \
+            -t ${{ env.ARTIFACT_REGISTRY_LOCATION }}/${{ vars.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPO }}/statista-agent:latest \
             -f Dockerfile .
 
       - name: Push Docker image
         run: |
-          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ vars.GCP_PROJECT }}/agents/statista-agent:${{ github.sha }}
-          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ vars.GCP_PROJECT }}/agents/statista-agent:latest
+          docker push ${{ env.ARTIFACT_REGISTRY_LOCATION }}/${{ vars.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPO }}/statista-agent:${{ github.sha }}
+          docker push ${{ env.ARTIFACT_REGISTRY_LOCATION }}/${{ vars.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPO }}/statista-agent:latest
 
       - name: Install ADK CLI
         run: |
@@ -67,7 +68,7 @@ jobs:
             --display-name "Statista Agent" \
             --project ${{ vars.GCP_PROJECT }} \
             --region ${{ env.GCP_REGION }} \
-            --image ${{ env.ARTIFACT_REGISTRY }}/${{ vars.GCP_PROJECT }}/agents/statista-agent:${{ github.sha }}
+            --image ${{ env.ARTIFACT_REGISTRY_LOCATION }}/${{ vars.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPO }}/statista-agent:${{ github.sha }}
 
       - name: Run smoke tests
         env:

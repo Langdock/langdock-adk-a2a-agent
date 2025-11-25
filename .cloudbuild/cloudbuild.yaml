@@ -4,9 +4,9 @@ steps:
     args:
       - 'build'
       - '-t'
-      - '${_ARTIFACT_REGISTRY}/${PROJECT_ID}/agents/statista-agent:${SHORT_SHA}'
+      - '${_ARTIFACT_REGISTRY}/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/statista-agent:${SHORT_SHA}'
       - '-t'
-      - '${_ARTIFACT_REGISTRY}/${PROJECT_ID}/agents/statista-agent:latest'
+      - '${_ARTIFACT_REGISTRY}/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/statista-agent:latest'
       - '-f'
       - 'Dockerfile'
       - '.'
@@ -16,14 +16,14 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - '${_ARTIFACT_REGISTRY}/${PROJECT_ID}/agents/statista-agent:${SHORT_SHA}'
+      - '${_ARTIFACT_REGISTRY}/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/statista-agent:${SHORT_SHA}'
     id: 'push-image-sha'
     waitFor: ['build-image']
 
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - '${_ARTIFACT_REGISTRY}/${PROJECT_ID}/agents/statista-agent:latest'
+      - '${_ARTIFACT_REGISTRY}/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/statista-agent:latest'
     id: 'push-image-latest'
     waitFor: ['build-image']
 
@@ -39,18 +39,19 @@ steps:
           --display-name "Statista Agent" \
           --project ${PROJECT_ID} \
           --region ${_REGION} \
-          --image ${_ARTIFACT_REGISTRY}/${PROJECT_ID}/agents/statista-agent:${SHORT_SHA}
+          --image ${_ARTIFACT_REGISTRY}/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/statista-agent:${SHORT_SHA}
     id: 'deploy-agent'
     waitFor: ['push-image-sha', 'push-image-latest']
 
 # Store images in Artifact Registry
 images:
-  - '${_ARTIFACT_REGISTRY}/${PROJECT_ID}/agents/statista-agent:${SHORT_SHA}'
-  - '${_ARTIFACT_REGISTRY}/${PROJECT_ID}/agents/statista-agent:latest'
+  - '${_ARTIFACT_REGISTRY}/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/statista-agent:${SHORT_SHA}'
+  - '${_ARTIFACT_REGISTRY}/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/statista-agent:latest'
 
 # Substitution variables
 substitutions:
   _ARTIFACT_REGISTRY: 'europe-west3-docker.pkg.dev'
+  _ARTIFACT_REGISTRY_REPO: 'langdock-agents'
   _REGION: 'europe-west3'
 
 options:

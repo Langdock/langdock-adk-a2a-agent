@@ -227,9 +227,10 @@ This agent is configured for automated deployment to Google Cloud's Vertex AI Ag
      ```
    - Create an Artifact Registry repository:
      ```bash
-     gcloud artifacts repositories create agents \
+     gcloud artifacts repositories create langdock-agents \
        --repository-format=docker \
-       --location=europe-west3
+       --location=europe-west3 \
+       --description="Container images for Langdock AI agents"
      ```
 
 2. **Workload Identity Federation:**

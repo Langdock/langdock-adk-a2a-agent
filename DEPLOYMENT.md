@@ -47,10 +47,10 @@ gcloud services enable \
 ### 3. Create Artifact Registry Repository
 
 ```bash
-gcloud artifacts repositories create agents \
+gcloud artifacts repositories create langdock-agents \
   --repository-format=docker \
   --location=europe-west3 \
-  --description="Container images for AI agents"
+  --description="Container images for Langdock AI agents"
 ```
 
 ### 4. Create Service Account
@@ -269,7 +269,7 @@ adk test agent_engine \
 ```bash
 # List images in Artifact Registry
 gcloud artifacts docker images list \
-  europe-west3-docker.pkg.dev/$GCP_PROJECT/agents/statista-agent
+  europe-west3-docker.pkg.dev/$GCP_PROJECT/langdock-agents/statista-agent
 ```
 
 ## Troubleshooting
@@ -406,7 +406,7 @@ Edit [.cloudbuild/cloudbuild.yaml](.cloudbuild/cloudbuild.yaml) to customize bui
   ```bash
   # Delete images older than 30 days
   gcloud artifacts docker images list \
-    europe-west3-docker.pkg.dev/$GCP_PROJECT/agents/statista-agent \
+    europe-west3-docker.pkg.dev/$GCP_PROJECT/langdock-agents/statista-agent \
     --filter="createTime<$(date -d '30 days ago' --iso-8601)" \
     --format="get(package)" | \
     xargs -I {} gcloud artifacts docker images delete {}

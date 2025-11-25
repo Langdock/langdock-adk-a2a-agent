@@ -54,17 +54,14 @@ format:
 	black .
 	ruff check --fix .
 
+# Deployment configuration
+GCP_PROJECT ?= langdock
+GCP_REGION ?= europe-west3
+
 # Deployment targets (require gcloud CLI and Docker)
 deploy:
 	@echo "Deploying A2A agent to Cloud Run..."
-	@if [ -z "$(GCP_PROJECT)" ]; then \
-		echo "Error: GCP_PROJECT environment variable is not set"; \
-		exit 1; \
-	fi
-	@if [ -z "$(GCP_REGION)" ]; then \
-		echo "Error: GCP_REGION environment variable is not set"; \
-		exit 1; \
-	fi
+	@echo "Using GCP_PROJECT=$(GCP_PROJECT), GCP_REGION=$(GCP_REGION)"
 	@echo "Step 1: Building Docker image..."
 	docker build -t $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/langdock-agents/statista-agent:latest .
 	@echo "Step 2: Configuring Docker authentication..."

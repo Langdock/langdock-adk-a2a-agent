@@ -4,36 +4,27 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    make \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy project files
-COPY pyproject.toml ./
+# Copy only dependency files first (for better layer caching)
 COPY requirements.txt ./
+COPY pyproject.toml ./
+
+# Install Python dependencies (this layer gets cached if requirements don't change)
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Now copy the rest of the application code
 COPY agent_engine_app.py ./
 COPY a2a_rootagent.py ./
 COPY logging_config.py ./
 COPY agent_card.json ./
 COPY statista_agent/ ./statista_agent/
 
-# Install Python dependencies
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -e .
-
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV PORT=8001
+ENV PORT=8080
 
 # Expose the A2A port
-EXPOSE 8001
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8001/health', timeout=5)" || exit 1
+EXPOSE 8080
 
 # Run the A2A agent
 CMD ["python", "a2a_rootagent.py"]

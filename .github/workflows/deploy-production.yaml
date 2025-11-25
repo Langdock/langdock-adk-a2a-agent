@@ -55,20 +55,35 @@ jobs:
           docker push ${{ env.ARTIFACT_REGISTRY_LOCATION }}/${{ vars.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPO }}/statista-agent:${{ github.sha }}
           docker push ${{ env.ARTIFACT_REGISTRY_LOCATION }}/${{ vars.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPO }}/statista-agent:latest
 
-      - name: Deploy to Cloud Run
+      - name: Get Cloud Run service URL (if exists)
+        id: get-url
         run: |
-          gcloud run deploy statista-a2a-agent \
-            --image ${{ env.ARTIFACT_REGISTRY_LOCATION }}/${{ vars.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPO }}/statista-agent:${{ github.sha }} \
-            --platform managed \
+          URL=$(gcloud run services describe statista-a2a-agent \
             --region ${{ env.GCP_REGION }} \
             --project ${{ vars.GCP_PROJECT }} \
-            --port 8001 \
+            --format 'value(status.url)' 2>/dev/null || echo "")
+          echo "service_url=$URL" >> $GITHUB_OUTPUT
+
+      - name: Deploy to Cloud Run
+        run: |
+          # Set APP_URL to existing URL or construct expected URL
+          if [ -n "${{ steps.get-url.outputs.service_url }}" ]; then
+            APP_URL="${{ steps.get-url.outputs.service_url }}"
+          else
+            APP_URL="https://statista-a2a-agent-$(gcloud projects describe ${{ vars.GCP_PROJECT }} --format='value(projectNumber)').${{ env.GCP_REGION }}.run.app"
+          fi
+
+          gcloud run deploy statista-a2a-agent \
+            --image ${{ env.ARTIFACT_REGISTRY_LOCATION }}/${{ vars.GCP_PROJECT }}/${{ env.ARTIFACT_REGISTRY_REPO }}/statista-agent:${{ github.sha }} \
+            --region ${{ env.GCP_REGION }} \
+            --project ${{ vars.GCP_PROJECT }} \
+            --port 8080 \
             --memory 1Gi \
             --cpu 1 \
             --min-instances 0 \
             --max-instances 10 \
             --allow-unauthenticated \
-            --set-env-vars GOOGLE_GENAI_USE_VERTEXAI=true,GOOGLE_CLOUD_PROJECT=${{ vars.GCP_PROJECT }},GOOGLE_CLOUD_LOCATION=${{ env.GCP_REGION }},STATISTA_API_KEY=${{ secrets.STATISTA_API_KEY }},STATISTA_MCP_URL=https://api.statista.ai/v1/mcp
+            --set-env-vars GOOGLE_GENAI_USE_VERTEXAI=true,GOOGLE_CLOUD_PROJECT=${{ vars.GCP_PROJECT }},GOOGLE_CLOUD_LOCATION=${{ env.GCP_REGION }},APP_URL=$APP_URL,STATISTA_API_KEY=${{ secrets.STATISTA_API_KEY }},STATISTA_MCP_URL=https://api.statista.ai/v1/mcp
 
       - name: Run smoke tests
         env:

@@ -26,12 +26,10 @@ class ApiKeyAuthMiddleware(BaseHTTPMiddleware):
         # Skip auth only for specific GET endpoints (health check and agent card)
         # The root path "/" should be protected for POST requests (which are RPC calls)
         if request.url.path in ["/health", "/.well-known/agent-card.json", "/.well-known/agent-card-dev.json"]:
-            logger.debug(f"Allowing unauthenticated access to {request.url.path}")
             return await call_next(request)
 
         # Allow GET requests to root for basic info, but protect POST (RPC calls)
         if request.url.path == "/" and request.method == "GET":
-            logger.debug(f"Allowing unauthenticated GET request to {request.url.path}")
             return await call_next(request)
 
         # Get API key from environment
@@ -39,7 +37,6 @@ class ApiKeyAuthMiddleware(BaseHTTPMiddleware):
 
         # If no API key is set, reject all requests
         if not expected_api_key:
-            logger.error("A2A_API_KEY not set - rejecting request")
             return JSONResponse(
                 status_code=500,
                 content={"error": "Server authentication not configured"}
@@ -47,6 +44,7 @@ class ApiKeyAuthMiddleware(BaseHTTPMiddleware):
 
         # Check X-API-Key header
         api_key = request.headers.get("X-API-Key")
+
         if not api_key:
             return JSONResponse(
                 status_code=401,
@@ -55,13 +53,11 @@ class ApiKeyAuthMiddleware(BaseHTTPMiddleware):
 
         # Validate API key
         if api_key != expected_api_key:
-            logger.warning(f"Failed authentication attempt for {request.url.path}")
             return JSONResponse(
-                status_code=403,
-                content={"error": "Invalid API key"}
+                status_code=401,
+                content={"error": "Unauthorized"}
             )
 
-        logger.debug(f"Authenticated request to {request.url.path}")
         return await call_next(request)
 
 

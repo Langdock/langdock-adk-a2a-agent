@@ -8,6 +8,8 @@ All tests passing with correct MCP parameter names and response parsing!
 
 ## Quick Start
 
+Create `.env` file from template and fill out statista key and set an api key if needed.
+
 ```bash
 # Start the agent
 ./run_a2a_agent.sh

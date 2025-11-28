@@ -78,7 +78,7 @@ a2a_app = to_a2a(
 
 # Add authentication middleware - must be added BEFORE any routes are accessed
 # The middleware will intercept all incoming requests
-a2a_app.add_middleware(ApiKeyAuthMiddleware)
+# a2a_app.add_middleware(ApiKeyAuthMiddleware)
 
 # Start the server
 if __name__ == "__main__":
